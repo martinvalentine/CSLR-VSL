@@ -27,9 +27,9 @@
   This will create a new conda env.
 
 ## 3. Implementation
-The implementation for the CorrNet (line 18) is given in [./CorrNet/modules/resnet.py](https://github.com/martinvalentine/CSLR-VSL/blob/main/modules/resnet.py).  
+The implementation for the CorrNet (line 18) is given in [./CorrNet/modules/resnet.py](https://github.com/martinvalentine/CSLR-VSL/blob/main/CorrNet/modules/resnet.py).  
 
-It's then equipped with the BasicBlock in ResNet in line 58 [./CorrNet/modules/resnet.py](https://github.com/martinvalentine/CSLR-VSL/blob/main/modules/resnet.py).
+It's then equipped with the BasicBlock in ResNet in line 58 [./CorrNet/modules/resnet.py](https://github.com/martinvalentine/CSLR-VSL/blob/main/CorrNet/modules/resnet.py).
 
 ## 4. Data Preparation
 Currently, a full end-to-end preprocessing pipeline has not been implemented. However, you can preprocess raw videos using the following script:
