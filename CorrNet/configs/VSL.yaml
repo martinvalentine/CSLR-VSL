@@ -1,0 +1,4 @@
+dataset_root: ./dataset/VSL_256x256
+dict_path: ./preprocess/VSL/gloss_dict.npy
+evaluation_dir: ./evaluation/slr_eval
+evaluation_prefix: vsl-ground-truth
