@@ -1,5 +1,9 @@
 # Ignore Dataset
 data/
+CorrNet/dataset/VSL_256x256/
+CorrNet/ctcdecode/
+CorrNet/software
+
 
 # idea
 .idea/
