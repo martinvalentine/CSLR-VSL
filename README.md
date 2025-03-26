@@ -20,11 +20,16 @@
    ``` bash
   pip install -r requirements.txt
    ```
-  or you can install the env I'm currently working on:
+  or you can install the environment I'm currently working on:
     ```bash
     conda env create -f environment.yml
     ```
   This will create a new conda env.
+
+- You also need to create base dataset folders for pre-processing by using this command:
+  ```bash
+  bash ./create_folder.sh
+  ```
 
 ## 3. Implementation
 The implementation for the CorrNet (line 18) is given in [./CorrNet/modules/resnet.py](https://github.com/martinvalentine/CSLR-VSL/blob/main/CorrNet/modules/resnet.py).  
