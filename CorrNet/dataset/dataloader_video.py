@@ -17,7 +17,7 @@ import pyarrow as pa
 from PIL import Image
 import torch.utils.data as data
 import matplotlib.pyplot as plt
-from CorrNet.utils import video_augmentation
+from utils import video_augmentation
 from torch.utils.data.sampler import Sampler
 
 sys.path.append("..")
@@ -68,7 +68,7 @@ class BaseFeeder(data.Dataset):
         elif self.dataset == 'CSL-Daily':
             img_folder = os.path.join(self.prefix, fi['folder'])
         elif self.dataset == 'VSL':
-            img_folder = os.path.join(self.prefix, fi['folder'])
+            img_folder = os.path.join(self.prefix,"/home/martinvalentine/Desktop/CSLR-VSL/data/processed/VSL_Sample/features/256x256px/" + fi['folder'])
 
         img_list = sorted(glob.glob(img_folder))
         img_list = img_list[int(torch.randint(0, self.frame_interval, [1]))::self.frame_interval]
