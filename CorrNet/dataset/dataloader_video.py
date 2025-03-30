@@ -17,7 +17,7 @@ import pyarrow as pa
 from PIL import Image
 import torch.utils.data as data
 import matplotlib.pyplot as plt
-from utils import video_augmentation
+from CorrNet.utils import video_augmentation
 from torch.utils.data.sampler import Sampler
 
 sys.path.append("..")
