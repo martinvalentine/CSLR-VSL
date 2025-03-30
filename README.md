@@ -37,8 +37,24 @@ The implementation for the CorrNet (line 18) is given in [./CorrNet/modules/resn
 It's then equipped with the BasicBlock in ResNet in line 58 [./CorrNet/modules/resnet.py](https://github.com/martinvalentine/CSLR-VSL/blob/main/CorrNet/modules/resnet.py).
 
 ## 4. Data Preparation
-Currently, a full end-to-end preprocessing pipeline has not been implemented. However, you can preprocess raw videos using the following script:
-[[./notebooks/pipeline_corrnet.ipynb](https://github.com/martinvalentine/CSLR-VSL/blob/main/notebooks/base_lstm_model_exp.ipynb)]
+### VSL dataset
+1. Download the VSL-Sample 2014 Dataset [[Google Drive Link](https://drive.google.com/drive/folders/1ZiUbFvpKDWkTW5HMPRXPXpP0_N5kX7Zs?usp=sharing)].
+
+2. After finishing dataset download, extract it to `data/raw/VSL_Sample/`
+
+3. The original image resolution is 1920×1080. First, crop it to 1080×1080 by running:
+  ```bash
+  python ./src/dataset/extract_frames_and_anno.py
+  ```
+  This code will:
+  - Extract and crop frames from videos.
+  - Resize them to 256×256 for augmentation.  
+ 4. Generate gloss dictionary, ground truth, and resize images by running: 
+   ```bash
+   cd ./CorrNet/preprocess
+   python dataset_preprocess.py --process-image --multiprocessing
+   ```
+This will prepare the dataset for training and evaluation. 
 
 ## 5. Inference
 
