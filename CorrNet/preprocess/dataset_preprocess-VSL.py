@@ -33,7 +33,7 @@ if __name__ == '__main__':
         # update the total gloss dict
         Preprocessing.gloss_dict_update(sign_dict, information)
         # generate groudtruth stm for evaluation
-        Preprocessing.generate_stm(information, f"./{args.dataset}"+f"/{args.dataset}-groundtruth-{md}.stm".lower())
+        Preprocessing.generate_stm(information, f"./{args.dataset}"+f"/{args.dataset}-ground-truth-{md}.stm".lower())
         # resize images
         video_index = np.arange(len(information) - 1)
         print(f"Resize image to {args.output_res}")
