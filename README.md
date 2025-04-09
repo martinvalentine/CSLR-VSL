@@ -26,7 +26,7 @@
     ```
   This will create a new conda env.
 
-- You also need to install src/cslr_vsl/ as a package. You can do this by running:
+- You also need to install `src/cslr_vsl/` as a package. You can do this by running:
   ```bash
   pip install -e .
   ```
