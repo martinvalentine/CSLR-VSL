@@ -2,6 +2,8 @@ import os
 import shutil
 from collections import defaultdict
 
+#TODO: ADJUST YOUR PATH TO THE VIDEO FILES BEFORE RUNNING THIS FILE
+
 # Define paths
 source_root = "/home/martinvalentine/Desktop/CSLR-VSL/data/raw/VSL/full_clean_sentences"
 dest_root = "/home/martinvalentine/Desktop/CSLR-VSL/data/raw/VSL/VSL_Benchmark"
