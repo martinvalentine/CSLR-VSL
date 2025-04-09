@@ -26,9 +26,9 @@
     ```
   This will create a new conda env.
 
-- You also need to create base dataset folders for pre-processing by using this command:
+- You also need to install src/cslr_vsl/ as a package. You can do this by running:
   ```bash
-  bash ./create_folder.sh
+  pip install -e .
   ```
 
 ## 3. Project Structure
