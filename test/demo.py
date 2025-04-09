@@ -1,10 +1,11 @@
 import os
 import cv2
-from utils import video_augmentation
-from slr_network import SLRModel
+from src.cslr_vsl.utils import video_augmentation
+from cslr_vsl.models.slr_network import SLRModel
 import torch
 from collections import OrderedDict
-import utils
+import src.cslr_vsl.utils as utils
+
 import argparse
 
 import numpy as np
@@ -127,7 +128,7 @@ if __name__ == "__main__":
     model_weights = args.model_path
 
     # Load data and apply transformation
-    dict_path = f'./preprocess/{dataset}/gloss_dict.npy'  # Use the gloss dict of phoenix14 scripts
+    dict_path = f'./preprocess/{dataset}/gloss_dict.npy'  # Use the gloss dict of vsl scripts
     gloss_dict = np.load(dict_path, allow_pickle=True).item()
 
     device = utils.GpuDataParallel()

@@ -3,24 +3,26 @@ import numpy as np
 import os
 import glob
 import cv2
-from utils import video_augmentation
-from slr_network import SLRModel
+from src.cslr_vsl.utils import video_augmentation
+from cslr_vsl.models.slr_network import SLRModel
 import torch
 from collections import OrderedDict
-import utils
+import src.cslr_vsl.utils as utils
+
+
 gpu_id = 0 # which gpu to use
-dataset = 'vsl' # support [phoenix2014, phoenix2014-T, CSL-Daily]
-prefix = './scripts/VSL_256x256' # ['./scripts/CSL-Daily', './scripts/phoenix2014-T', './scripts/phoenix2014/phoenix-2014-multisigner']
+dataset = 'vsl'
+prefix = './scripts/VSL_256x256'
 dict_path = f'./preprocess/{dataset}/gloss_dict.npy'
-model_weights = 'path_to_model_weights'  #TODO: replace with your path
-select_id = 0 # The video selected to show. 539 for 31October_2009_Saturday_tagesschau_default-8, 0 for 01April_2010_Thursday_heute_default-1, 1 for 01August_2011_Monday_heute_default-6, 2 for 01December_2011_Thursday_heute_default-3
+model_weights = 'path_to_model_weights'  #TODO: replace with model path
+select_id = 0 # The video selected to show
 
 # Load data and apply transformation
 gloss_dict = np.load(dict_path, allow_pickle=True).item()
 inputs_list = np.load(f"./preprocess/{dataset}/dev_info.npy", allow_pickle=True).item()
 name = inputs_list[select_id]['fileid']
 print(f'Generating CAM for {name}')
-img_folder = os.path.join(prefix, "features/fullFrame-256x256px/" + inputs_list[select_id]['folder']) if 'phoenix' in dataset else os.path.join(prefix, inputs_list[select_id]['folder'])
+img_folder = os.path.join(prefix, "features/fullFrame-256x256px/" + inputs_list[select_id]['folder']) if 'vsl' in dataset else os.path.join(prefix, inputs_list[select_id]['folder'])
 img_list = sorted(glob.glob(img_folder))
 img_list = [cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB) for img_path in img_list]
 label_list = []
@@ -80,7 +82,7 @@ model.train()
 
 def forward_hook(module, input, output):
     fmap_block.append(output)       #N, C, T, H, ,W 
-if 'phoenix' in dataset:
+if 'vsl' in dataset:
     model.conv2d.corr2.conv_back.register_forward_hook(forward_hook)	
 else:
     model.conv2d.corr3.conv_back.register_forward_hook(forward_hook)  # For CSL-Daily

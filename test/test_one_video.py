@@ -2,11 +2,11 @@
 import numpy as np
 import os
 import cv2
-from utils import video_augmentation
-from slr_network import SLRModel
+from src.cslr_vsl.utils import video_augmentation
+from cslr_vsl.models.slr_network import SLRModel
 import torch
 from collections import OrderedDict
-import utils
+import src.cslr_vsl.utils as utils
 from decord import VideoReader, cpu
 import argparse
 VIDEO_FORMATS = [".mp4", ".avi", ".mov", ".MOV", ".mkv"]
@@ -52,7 +52,7 @@ else:
 
 
 # Load data and apply transformation
-dict_path = f'./preprocess/{dataset}/gloss_dict.npy'  # Use the gloss dict of phoenix14 scripts
+dict_path = f'./preprocess/{dataset}/gloss_dict.npy'  # Use the gloss dict of vsl scripts
 gloss_dict = np.load(dict_path, allow_pickle=True).item()
 
 if os.path.isdir(args.video_path): # extracted images of a video

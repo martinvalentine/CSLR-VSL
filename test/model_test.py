@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-from src.utils import mediapipe_utils as mp_utils
-from src.models import model3_exp as model3
+from src.cslr_vsl.utils import mediapipe_utils as mp_utils
+from src.cslr_vsl.models import model3_exp as model3
 
 # Load the models
 model = model3.load_model(model3.model, '/home/martinvalentine/Desktop/sign-language-lstm/models/exp3.h5')
