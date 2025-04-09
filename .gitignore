@@ -1,6 +1,6 @@
 # Ignore Dataset
-/data/0_raw/VSL/
-/data/2_interim/VSL/
+/data/raw/
+/data/interim/
 /third_party/software/sclite
 /third_party/ctcdecode
 

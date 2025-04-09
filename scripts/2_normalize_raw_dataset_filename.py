@@ -11,6 +11,8 @@ What this code does:
 2. Renames video files inside each signer folder to follow a consistent format: video1.ext, video2.ext, etc.
 '''
 
+#TODO: ADJUST YOUR PATH TO THE VIDEO FILES BEFORE RUNNING THIS FILE
+
 # Path to your data
 root_path = "/home/martinvalentine/Desktop/CSLR-VSL/data/raw/VSL/full_clean_sentences"
 print(f"Starting normalization process in: {root_path}")

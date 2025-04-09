@@ -3,6 +3,8 @@ import logging
 from pathlib import Path
 from multiprocessing import Pool, cpu_count
 
+#TODO: ADJUST YOUR PATH TO THE VIDEO FILES BEFORE RUNNING THIS FILE
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

@@ -2,6 +2,8 @@ import cv2
 from pathlib import Path
 from collections import defaultdict
 
+#TODO: ADJUST YOUR PATH TO THE VIDEO FILES BEFORE RUNNING THIS FILE
+
 def get_video_duration(video_path):
     """
     Return duration of video in seconds (float).
