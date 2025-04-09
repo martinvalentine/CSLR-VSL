@@ -1,9 +1,8 @@
 # Ignore Dataset
-data/
-CorrNet/dataset/VSL_256x256/
-CorrNet/ctcdecode/
-CorrNet/software
-
+/data/0_raw/VSL/
+/data/2_interim/VSL/
+/third_party/software/sclite
+/third_party/ctcdecode
 
 # idea
 .idea/

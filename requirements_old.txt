@@ -1,7 +1,0 @@
-opencv-python
-mediapipe==0.10.20
-scikit-learn
-matplotlib
-pydot
-pydotplus
-graphviz

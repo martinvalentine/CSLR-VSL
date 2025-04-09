@@ -44,7 +44,7 @@ It's then equipped with the BasicBlock in ResNet in line 58 [./CorrNet/modules/r
 
 3. The original image resolution is 1920×1080. First, crop it to 1080×1080 by running:
   ```bash
-  python ./src/dataset/extract_frames_and_anno.py
+  python ./src/scripts/5_extract_frames_and_anno.py
   ```
   This code will:
   - Extract and crop frames from videos.
@@ -52,7 +52,7 @@ It's then equipped with the BasicBlock in ResNet in line 58 [./CorrNet/modules/r
  4. Generate gloss dictionary, ground truth, and resize images by running: 
    ```bash
    cd ./CorrNet/preprocess
-   python dataset_preprocess.py --process-image --multiprocessing
+   python dataset_preprocess-VSL.py --process-image --multiprocessing
    ```
 This will prepare the dataset for training and evaluation. 
 
@@ -75,8 +75,7 @@ python main.py --config ./config/baseline.yaml --device 0 --load-weights path_to
 
 The priorities of configuration files are: command line > config file > default values of argparse. To train the SLR model, run the command below:
 ```bash
-cd CorrNet/
-python main.py --config ./configs/baseline.yaml --device 0
+python ./scripts/run_corrNet_pipline.py --config ./configs/baseline.yaml --device 0
 ```
 
 ### Visualizations
