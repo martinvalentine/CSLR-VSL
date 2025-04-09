@@ -15,6 +15,6 @@ pydotplus
 graphviz
 
 # OpenCV & MediaPipe
-opencv-python==4.5.5.64
+opencv-python
 mediapipe==0.10.11
 
