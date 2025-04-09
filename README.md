@@ -115,10 +115,15 @@ CSLR-VSL/
    - Listing unique sentences in markdown format
    - Total Video Count
 
-8. After splitting the dataset, you need to extract the frames from the videos. You can use the `./scripts/5_extract_frames.py` script to do this. This script will:
+8. After splitting the dataset, you need to extract the frames from the videos. You can do this by running:
+    ```bash
+    python ./scripts/5_extract_frames_and_anno.py
+    ```
+    This script will:
    - Extract frames from each video in the dataset and save them in a specified directory.
    - Create a CSV file containing the mapping between video files and their corresponding frame directories.
    - The extracted frames will be cropped to 1080×1080.
+   - Ensure you have enough disk space, as ***the extracted frames can take up a significant amount of space and will use max CPU cores for extraction***.
   
 9. Finally, you need to generate gloss dictionary, ground truth, and resize images by running: 
    ```bash

@@ -239,9 +239,9 @@ def count_videos(root_dir, split):
 
 if __name__ == "__main__":
     # Configure paths
-    root_dir = Path("../../data/raw/VSL/VSL_Benchmark")
-    output_dir = Path("../../data/interim/VSL_Benchmark")
-    csv_dir = Path("../../data/processed/VSL_Benchmark/csv")
+    root_dir = Path("../data/raw/VSL/VSL_Benchmark")
+    output_dir = Path("../data/interim/VSL/frames/VSL_Benchmark")
+    csv_dir = Path("../data/splits/VSL_Benchmark/csv")
 
     # Count total videos to determine optimal parameters
     total_videos = sum(count_videos(root_dir, split) for split in ["train", "test", "dev"])
