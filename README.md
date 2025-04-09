@@ -125,10 +125,10 @@ CSLR-VSL/
    python ./src/cslr_vsl/features/dataset_preprocess-VSL.py --process-image --multiprocessing
    ```
   This code will:
-    - Generate information dictionary for train, test, dev dataset. 
-    - Generate a gloss dictionary for the dataset.
-    - Create a `.stm` file containing the ground truth labels for each video.
-    - Resize them to 256×256 for augmentation.
+   - Generate information dictionary for train, test, dev dataset. 
+   - Generate a gloss dictionary for the dataset.
+   - Create a `.stm` file containing the ground truth labels for each video.
+   - Resize them to 256×256 for augmentation.
 
 ## 5. Inference
 
