@@ -2,7 +2,7 @@ import numpy as np
 import os
 from tqdm import tqdm
 from functools import partial
-from vsl_preprocess import Preprocessing
+from src.cslr_vsl.utils.vsl_preprocess import Preprocessing
 import argparse
 
 if __name__ == '__main__':

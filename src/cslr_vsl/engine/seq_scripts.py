@@ -108,8 +108,8 @@ def seq_feature_generation(loader, model, device, mode, work_dir, recoder):
 
     src_path = os.path.abspath(f"{work_dir}{mode}")
     tgt_path = os.path.abspath(f"./features/{mode}")
-    if not os.path.exists("./features/"):
-        os.makedirs("./features/")
+    if not os.path.exists("../features/"):
+        os.makedirs("../features/")
 
     if os.path.islink(tgt_path):
         curr_path = os.readlink(tgt_path)

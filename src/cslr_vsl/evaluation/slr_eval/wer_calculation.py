@@ -9,7 +9,7 @@ def evaluate(prefix="./", mode="dev", evaluate_dir=None, evaluate_prefix=None,
     '''
     TODO  change file save path
     '''
-    sclite_path = "./software/sclite"
+    sclite_path = "./third_party/software/sclite"
     print(os.getcwd())
     os.system(f"bash {evaluate_dir}/preprocess.sh {prefix + output_file} {prefix}tmp.ctm {prefix}tmp2.ctm")
     os.system(f"cat {evaluate_dir}/{evaluate_prefix}-{mode}.stm | sort  -k1,1 > {prefix}tmp.stm")
