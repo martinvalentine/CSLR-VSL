@@ -198,7 +198,7 @@ def process_and_extract_frames_optimized(root_dir, output_dir, csv_dir, split, n
 
 def get_optimal_parameters(total_videos):
     """
-    Calculate optimal parameters based on the dataset size and system.
+    Calculate optimal parameters based on the scripts size and system.
 
     Returns:
         tuple: (chunk_size, sample_rate)

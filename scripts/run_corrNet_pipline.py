@@ -14,7 +14,7 @@ from collections import OrderedDict
 faulthandler.enable()
 import src.cslr_vsl.utils as utils
 from src.cslr_vsl.modules.sync_batchnorm import convert_model
-from seq_scripts import seq_train, seq_eval, seq_feature_generation
+from cslr_vsl.engine.seq_scripts import seq_train, seq_eval, seq_feature_generation
 
 
 class Processor():
@@ -31,7 +31,7 @@ class Processor():
         else:
             os.makedirs(self.arg.work_dir)
         shutil.copy2(__file__, self.arg.work_dir)
-        shutil.copy2('./configs/baseline.yaml', self.arg.work_dir)
+        shutil.copy2('../configs/baseline.yaml', self.arg.work_dir)
         shutil.copy2('modules/tconv.py', self.arg.work_dir)
         shutil.copy2('modules/resnet.py', self.arg.work_dir)
         self.recoder = utils.Recorder(self.arg.work_dir, self.arg.print_log, self.arg.log_interval)
@@ -202,11 +202,7 @@ class Processor():
         print("Loading data")
         self.feeder = import_class(self.arg.feeder)
         shutil.copy2(inspect.getfile(self.feeder), self.arg.work_dir)
-        if self.arg.dataset == 'CSL':
-            dataset_list = zip(["train", "dev"], [True, False])
-        elif 'phoenix' in self.arg.dataset:
-            dataset_list = zip(["train", "train_eval", "dev", "test"], [True, False, False, False]) 
-        elif self.arg.dataset == 'VSL':
+        if self.arg.dataset == 'VSL':
             dataset_list = zip(["train", "train_eval", "dev", "test"], [True, False, False, False])
         # DEBUG
         print("Dataset List: ", dataset_list)
