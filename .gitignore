@@ -1,8 +1,10 @@
 # Ignore Dataset
-/data/raw/
-/data/interim/
+.data/
 /third_party/software/sclite
 /third_party/ctcdecode
+
+# API keys
+/test/creds.py
 
 # idea
 .idea/
