@@ -87,9 +87,9 @@ CSLR-VSL/
 
 ## 4. Data Preparation
 ### VSL dataset
-1. Download the VSL-Sample 2014 Dataset [[Google Drive Link](https://drive.google.com/drive/folders/1ZiUbFvpKDWkTW5HMPRXPXpP0_N5kX7Zs?usp=sharing)].
+1. Download the VSL-Sample 2014 Dataset [[Google Drive Link](https://drive.google.com/drive/folders/1hgs8gDnurZ3IS8u4azz3E4-z9dmN3S-M?usp=sharing)].
 
-2. After finishing dataset download, extract it to `data/raw/VSL_Sample/`
+2. After finishing dataset download, extract it to `data/raw/VSL_V0`
 
 3. (***Optional***) If you have minor videos type, you can use the `./scripts/0_flip_video.py` to flip the videos. This script will create a new folder `data/raw/flipped_videos/` with flipped videos.
 
@@ -117,8 +117,8 @@ CSLR-VSL/
 
 8. After splitting the dataset, you need to extract the frames from the videos. You can do this by running:
     ```bash
-    python ./scripts/5_extract_frames_and_anno.py
-    ```
+    python scripts/5_extract_frames_and_anno.py
+   ```
     This script will:
    - Extract frames from each video in the dataset and save them in a specified directory.
    - Create a CSV file containing the mapping between video files and their corresponding frame directories.
@@ -134,6 +134,18 @@ CSLR-VSL/
    - Generate a gloss dictionary for the dataset.
    - Create a `.stm` file containing the ground truth labels for each video.
    - Resize them to 256×256 for augmentation.
+10. For extract keypoints for training **based LSTM model**, you can use this command to extract:
+```bash
+python ./src/cslr_vsl/features/get_hand_landmark_data.py \
+  --input_folder ./data/interim/VSL/frames/VSL_Benchmark \
+  --output_folder ./data/processed/VSL_Benchmark_landmarks \
+  --summary_path ./data/processed/VSL_Benchmark_landmarks/summary.csv
+```
+This script will:
+   - Extract keypoints from the video files and save them in a specified directory.
+   - The extracted keypoints will be saved in Numpy format.
+   - The script will also create a summary for extracted keypoints.
+   - Ensure you have enough disk space, as ***the extracted keypoints can take up a significant amount of space and will use max CPU cores for extraction***.
 
 ## 5. Inference
 
@@ -171,7 +183,7 @@ python ./test/test_one_video.py --model_path /path_to_pretrained_weights --video
 
 The `video_path` can be the path to a video file or a dir contains extracted images from a video.
 
-Acceptable paramters:
+Acceptable parameters:
 - `model_path`, the path to pretrained weights.
 - `video_path`, the path to a video file or a dir contains extracted images from a video.
 - `device`, which device to run inference, default=0.
