@@ -225,6 +225,6 @@ def wer_calculation(gt_path, primary_pred, auxiliary_pred=None):
 
 
 if __name__ == '__main__':
-    wer_calculation('vsl-ground-truth-dev.stm',
+    wer_calculation('vsl_benchmark-ground-truth-dev.stm',
                     'out.output-hypothesis-dev.ctm')
     #                     'out.output-hypothesis-dev-conv.ctm')

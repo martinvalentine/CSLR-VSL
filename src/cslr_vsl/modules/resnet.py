@@ -39,7 +39,7 @@ class Get_Correlation(nn.Module):
 
         # Calculate the correlation features
         features = torch.einsum('bctsd,bthwsd->bcthw', torch.concat([x2[:,:,1:], x2[:,:,-1:]], 2), F.sigmoid(affinities)-0.5 )* self.weights2[0] + \
-            torch.einsum('bctsd,bthwsd->bcthw', torch.concat([x2[:,:,:1], x2[:,:,:-1]], 2), F.sigmoid(affinities2)-0.5 ) * self.weights2[1] 
+            torch.einsum('bctsd,bthwsd->bcthw', torch.concat([x2[:,:,:1], x2[:,:,:-1]], 2), F.sigmoid(affinities2)-0.5 ) * self.weights2[1]
 
         x = self.down_conv(x)
         aggregated_x = self.spatial_aggregation1(x)*self.weights[0] + self.spatial_aggregation2(x)*self.weights[1] \
@@ -47,7 +47,7 @@ class Get_Correlation(nn.Module):
         aggregated_x = self.conv_back(aggregated_x)
 
         return features * (F.sigmoid(aggregated_x)-0.5)
-        
+
 
 def conv3x3(in_planes, out_planes, stride=1):
     # 3x3x3 convolution with padding
@@ -110,9 +110,10 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.corr3 = Get_Correlation(self.inplanes)
         self.avgpool = nn.AvgPool2d(7, stride=1)
+        # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
-        
-            
+
+
         for m in self.modules():
             if isinstance(m, nn.Conv3d) or isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
@@ -145,7 +146,7 @@ class ResNet(nn.Module):
         x = self.maxpool(x)
 
         x = self.layer1(x)
-        x = self.layer2(x) 
+        x = self.layer2(x)
         x = x + self.corr1(x) * self.alpha[0]
         x = self.layer3(x)
         x = x + self.corr2(x) * self.alpha[1]
@@ -168,7 +169,7 @@ def resnet18(**kwargs):
     layer_name = list(checkpoint.keys())
     for ln in layer_name :
         if 'conv' in ln or 'downsample.0.weight' in ln:
-            checkpoint[ln] = checkpoint[ln].unsqueeze(2)  
+            checkpoint[ln] = checkpoint[ln].unsqueeze(2)
     model.load_state_dict(checkpoint, strict=False)
     return model
 

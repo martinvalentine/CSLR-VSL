@@ -9,7 +9,7 @@ def get_parser():
                     'for Continuous Sign Language Recognition.')
     parser.add_argument(
         '--work-dir',
-        default='./work_dir/temp',
+        default='./outputs/logs/temp',
         help='the work folder for storing results')
     parser.add_argument(
         '--config',
@@ -66,12 +66,12 @@ def get_parser():
     parser.add_argument(
         '--feeder', default='dataloader_video.BaseFeeder', help='data loader will be used')
     parser.add_argument(
-        '--scripts',
+        '--dataset',
         default=None,
         help='data loader will be used'
     )
     parser.add_argument(
-        '--scripts-info',
+        '--dataset-info',
         default=dict(),
         help='data loader will be used'
     )
