@@ -9,7 +9,7 @@ from multiprocessing import Pool, cpu_count
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def flip_video(video_path, output_path, flip_code=1):
+def flip_video(video_path, output_path, flip_code=1):  # flip_code: 0=vertical, 1=horizontal, -1=both
     """
     Flip a single video and save it to the output path.
     """
@@ -40,29 +40,38 @@ def flip_video(video_path, output_path, flip_code=1):
     logging.info(f"Flipped video saved: {output_path}")
 
 
-def process_all_videos(input_dir, output_dir):
+def process_all_videos(input_dir, output_dir, flip_code=0):
     """
-    Process and flip all video files inside signer folders under sentence folders.
+    Process and flip all video files under gloss/signer folders.
     """
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
 
-    video_files = list(input_dir.rglob("*.MOV")) + list(input_dir.rglob("*.mp4"))
+    video_files = [f for f in input_dir.rglob("*") if f.suffix.lower() in ['.mp4', '.mov']]
     logging.info(f"Found {len(video_files)} videos to process...")
+
+    if len(video_files) == 0:
+        logging.warning("No video files found!")
+        return
+
+    # Optional: Show example paths
+    logging.info("Example video paths:")
+    for f in video_files[:3]:
+        logging.info(f"  {f}")
 
     tasks = []
     for video_path in video_files:
         relative_path = video_path.relative_to(input_dir)
         output_video_path = output_dir / relative_path
-        tasks.append((video_path, output_video_path))
+        tasks.append((video_path, output_video_path, flip_code))
 
     with Pool(processes=max(1, cpu_count() - 1)) as pool:
         pool.starmap(flip_video, tasks)
 
 
 if __name__ == "__main__":
-    input_video_dir = "/home/martinvalentine/Desktop/CSLR-VSL/data/raw/VSL/minnor"
-    output_video_dir = "/home/martinvalentine/Desktop/CSLR-VSL/data/raw/VSL/flipped_videos"
+    input_video_dir = "/home/martinvalentine/Desktop/VSL/VSL"
+    output_video_dir = "/home/martinvalentine/Desktop/VSL/VSL_Flipped"
 
-    process_all_videos(input_video_dir, output_video_dir)
+    process_all_videos(input_video_dir, output_video_dir, flip_code=0)  # Change flip_code here if needed# flip_code = 1 for horizontal, 0 for vertical and -1 for both
     logging.info("All videos processed and flipped successfully!")

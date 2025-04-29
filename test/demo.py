@@ -1,15 +1,15 @@
 import os
 import cv2
-from src.cslr_vsl.utils import video_augmentation
+from cslr_vsl.utils import video_augmentation
 from cslr_vsl.models.slr_network import SLRModel
 import torch
 from collections import OrderedDict
-import src.cslr_vsl.utils as utils
+import cslr_vsl.utils as utils
 
 import argparse
 
 import numpy as np
-VIDEO_FORMATS = [".mp4", ".avi", ".mov", 'MOV', ".mkv"]
+VIDEO_FORMATS = [".mp4", ".avi", ".mov", '.MOV', ".mkv"]
 os.environ['GRADIO_TEMP_DIR'] = 'gradio_temp'
 import gradio as gr
 import os
@@ -107,7 +107,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, help="The path to pretrained weights")
     parser.add_argument("--device", type=int, default=0)
-    parser.add_argument("--language", type=str, default='vsl', choices=['vsl'])
+    parser.add_argument("--language", type=str, default='vsl_benchmark', choices=['vsl', 'vsl_benchmark'])
     parser.add_argument("--max_frames_num", type=int, default=360)
     
     return parser.parse_args()
@@ -122,13 +122,15 @@ if __name__ == "__main__":
     device_id = args.device  # specify which gpu to use
     if args.language == 'vsl':
         dataset = 'VSL'
+    if args.language == 'vsl_benchmark':
+        dataset = 'VSL_Benchmark'
     else:
         raise ValueError("Please select target language from ['vsl'] in your command")
 
     model_weights = args.model_path
 
     # Load data and apply transformation
-    dict_path = f'./preprocess/{dataset}/gloss_dict.npy'  # Use the gloss dict of vsl scripts
+    dict_path = f'./data/processed/{dataset}/gloss_dict.npy'  # Use the gloss dict of vsl scripts
     gloss_dict = np.load(dict_path, allow_pickle=True).item()
 
     device = utils.GpuDataParallel()

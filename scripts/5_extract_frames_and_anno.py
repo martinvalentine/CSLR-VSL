@@ -2,271 +2,175 @@ import os
 import re
 import csv
 import cv2
-import numpy as np
-from pathlib import Path
-from multiprocessing import Pool, cpu_count
-import logging
-from functools import partial
 import time
+import logging
+import argparse
+from pathlib import Path
+from collections import defaultdict
+from multiprocessing import Pool, cpu_count
+from tqdm import tqdm
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+def extract_raw_frames(video_path, output_folder, sample_rate=1, flip_vertical=False, crop_dims=None):
+    vidcap = cv2.VideoCapture(video_path)
+    if not vidcap.isOpened():
+        raise IOError(f"Cannot open video {video_path}")
 
+    os.makedirs(output_folder, exist_ok=True)
 
-def crop_to_square(image):
-    """
-    Crops an image to a 1080x1080 square, assuming the input is 1920x1080.
-    Optimized to avoid unnecessary checks for most frames.
-    """
-    if image is None:
-        return None
+    count = 0
+    saved = 0
+    while True:
+        success, frame = vidcap.read()
+        if not success:
+            break
+        if count % sample_rate == 0:
+            if flip_vertical:
+                frame = cv2.flip(frame, 0)
 
-    # Only check dimensions on first frame or if there's an error later
-    height, width = image.shape[:2]
+            if crop_dims:
+                target_w, target_h = crop_dims
+                original_h, original_w = frame.shape[:2] # Get original height and width
 
-    if width != 1920 or height != 1080:
-        logging.warning(f"Image dimensions are {width}x{height}, expected 1920x1080 for cropping.")
-        return None
+                # Check if the frame is large enough for the requested crop
+                if original_w >= target_w and original_h >= target_h:
+                    start_x = (original_w - target_w) // 2
+                    end_x = start_x + target_w
+                    start_y = (original_h - target_h) // 2
+                    end_y = start_y + target_h
+                    frame = frame[start_y:end_y, start_x:end_x]
+                    # Verify cropped dimensions (optional, for debugging)
+                    # print(f"Cropped frame shape: {frame.shape}")
+                else:
+                    # Log a warning if the frame is too small to crop as requested
+                    logging.warning(f"Video {video_path}: Frame {count} ({original_w}x{original_h}) is smaller than target crop dimensions ({target_w}x{target_h}). Skipping crop for this frame.")
 
-    # Use array slicing (more efficient than creating a new array)
-    return image[:, 420:1500]
+            frame_name = f"{saved:04d}.png"
+            frame_path = os.path.join(output_folder, frame_name)
+            cv2.imwrite(frame_path, frame)
+            saved += 1
+        count += 1
+    vidcap.release()
 
-
-def extract_frames_from_video(video_path, output_path, sample_rate=1):
-    """
-    Extracts and crops frames from a video at a given sample rate.
-
-    Args:
-        video_path: Path to the video file.
-        output_path: Path to the directory where cropped frames will be saved.
-        sample_rate: Extract every nth frame (default=1 for all frames).
-
-    Returns:
-        int: The number of frames extracted and saved.
-    """
-    cap = cv2.VideoCapture(str(video_path))
-    if not cap.isOpened():
-        logging.error(f"Could not open video file: {video_path}")
-        return 0
-
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    # Read video properties
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-
-    # Preallocate arrays for better memory management
-    extracted_frame_count = 0
-    frames_to_extract = range(0, frame_count, sample_rate)
-
-    # Process frames in batches for better efficiency
-    batch_size = 10
-    for i in range(0, len(frames_to_extract), batch_size):
-        batch_indices = frames_to_extract[i:i + batch_size]
-
-        for frame_index in batch_indices:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-            ret, frame = cap.read()
-            if not ret:
-                continue
-
-            cropped_frame = crop_to_square(frame)
-            if cropped_frame is not None:
-                frame_filename = output_path / f"frame_{frame_index:04d}.png"
-                # Use optimized writing parameters
-                cv2.imwrite(
-                    str(frame_filename),
-                    cropped_frame,
-                    [cv2.IMWRITE_PNG_COMPRESSION, 3]  # Balanced compression/speed
-                )
-                extracted_frame_count += 1
-
-    cap.release()
-    return extracted_frame_count
-
-
-def process_single_video(args):
-    """
-    Processes a single video: extracts and crops frames, and returns an annotation entry.
-    Modified to accept a single argument tuple for better multiprocessing compatibility.
-    """
-    video_file, sentence_id, signer_id, trial_index, gloss_label, output_root, split_output_path, sample_rate = args
-
-    video_id = f"S{sentence_id:06d}_P{signer_id:04d}_T{trial_index + 1:02d}"
-    video_output_path = split_output_path / video_id
+def process_single_video_extraction_raw(task):
+    video_path, gloss_label, output_root, split_output, sample_rate, flip_vertical, crop_dims = task
 
     try:
-        frame_count = extract_frames_from_video(video_file, video_output_path, sample_rate)
-        relative_path = video_output_path.relative_to(Path(output_root))
-        logging.info(f"Extracted and cropped {frame_count} frames from {video_file}")
-        return [video_id, f"{relative_path}", gloss_label]
+        video_filename = Path(video_path).stem
+        output_folder = Path(split_output) / video_filename
+        output_folder.mkdir(parents=True, exist_ok=True)
+
+        extract_raw_frames(video_path, output_folder, sample_rate, flip_vertical, crop_dims)
+
+        # Compute relative path from output_root
+        relative_path = output_folder.relative_to(Path(output_root))
+
+        return (video_filename, str(relative_path), gloss_label)
     except Exception as e:
-        logging.error(f"Error processing {video_file}: {e}")
+        logging.error(f"Failed processing video {video_path}: {e}")
         return None
 
 
-def collect_video_tasks(root_dir, output_dir, split, sample_rate=1):
-    """
-    Collects all video processing tasks for the given split.
-
-    Returns:
-        list: A list of task tuples for multiprocessing.
-    """
+def collect_video_tasks_flat(root_dir, output_dir, split, sample_rate=1, flip_vertical=False, crop_dims=None):
     tasks = []
-    root_path = root_dir / split
-    split_output_path = Path(output_dir) / split
+    root_path = Path(root_dir) / split
+    split_output = Path(output_dir) / split
+    exts = {".mov", ".mp4", ".avi"}
 
-    sentence_folders = sorted([f for f in root_path.iterdir() if f.is_dir()])
+    if not root_path.is_dir():
+        logging.warning(f"split '{split}' not found at {root_path}")
+        return tasks
 
-    for sentence_index, sentence_folder in enumerate(sentence_folders):
-        sentence_id = sentence_index + 1
-        gloss_label = sentence_folder.name
+    sentence_folders = sorted(p for p in root_path.iterdir() if p.is_dir())
+    for sent_f in sentence_folders:
+        gloss_label = sent_f.name
+        vids = [p for p in sent_f.iterdir() if p.is_file() and p.suffix.lower() in exts]
+        if not vids:
+            continue
 
-        for signer_folder in sorted(sentence_folder.iterdir()):
-            if not signer_folder.is_dir():
-                continue
-
-            signer_match = re.search(r'Signer(\d+)', str(signer_folder))
-            signer_id = int(signer_match.group(1)) if signer_match else 0
-
-            for trial_index, video_file in enumerate(sorted(signer_folder.iterdir())):
-                if video_file.suffix.lower() in {".mp4", ".mov", ".avi"}:
-                    tasks.append((
-                        video_file,
-                        sentence_id,
-                        signer_id,
-                        trial_index,
-                        gloss_label,
-                        output_dir,
-                        split_output_path,
-                        sample_rate
-                    ))
+        for video_file in sorted(vids):
+            tasks.append((
+                str(video_file),
+                gloss_label,
+                str(output_dir),
+                str(split_output),
+                sample_rate,
+                flip_vertical,
+                crop_dims
+            ))
 
     return tasks
 
 
-def process_and_extract_frames_optimized(root_dir, output_dir, csv_dir, split, num_processes=None, sample_rate=1,
-                                         chunk_size=1):
-    """
-    Optimized function to extract and crop frames from videos using dynamic workload distribution.
+def process_split_optimized_raw_flat(root_dir, output_dir, csv_dir, split, num_procs, sample_rate, chunk_size, flip_vertical, crop_dims):
+    start = time.time()
+    split_output = Path(output_dir) / split
+    split_output.mkdir(parents=True, exist_ok=True)
+    Path(csv_dir).mkdir(parents=True, exist_ok=True)
 
-    Args:
-        root_dir: Root directory containing the video data.
-        output_dir: Directory to save extracted frames.
-        csv_dir: Directory to save CSV annotations.
-        split: Data split (train, test, dev).
-        num_processes: Number of CPU processes to use.
-        sample_rate: Extract every nth frame.
-        chunk_size: Chunk size for task distribution.
-    """
-    start_time = time.time()
+    tasks = collect_video_tasks_flat(root_dir, output_dir, split, sample_rate, flip_vertical, crop_dims)
+    if not tasks:
+        logging.warning(f"No tasks for split '{split}' — skipping")
+        return
 
-    # Create output directories
-    output_path = Path(output_dir) / split
-    output_path.mkdir(parents=True, exist_ok=True)
-    csv_path = Path(csv_dir)
-    csv_path.mkdir(parents=True, exist_ok=True)
+    total = len(tasks)
+    logging.info(f"→ {total} videos queued in '{split}'")
+    if not chunk_size or chunk_size < 1:
+        chunk_size = max(1, total // (num_procs * 4))
+        logging.info(f"  auto‐calculated chunksize: {chunk_size}")
 
-    # Collect all tasks
-    tasks = collect_video_tasks(root_dir, output_dir, split, sample_rate)
-    logging.info(f"Collected {len(tasks)} videos to process for {split} split")
+    results = []
+    with Pool(num_procs) as pool:
+        for res in tqdm(pool.imap_unordered(process_single_video_extraction_raw, tasks, chunksize=chunk_size),
+                        total=total, desc=f"Extracting {split}"):
+            if res:
+                results.append(res)
 
-    # Process videos in parallel
-    if num_processes is None:
-        num_processes = max(1, cpu_count() - 1)  # Leave one CPU free for system tasks
+    results.sort(key=lambda r: r[0])
+    csv_path = Path(csv_dir) / f"{split}_annotations.csv"
+    with open(csv_path, 'w', newline='', encoding='utf-8') as fp:
+        wr = csv.writer(fp)
+        wr.writerow(["Video_ID", "Frames_Path", "Gloss_Label"])
+        wr.writerows(results)
 
-    logging.info(f"Processing with {num_processes} processes")
+    logging.info(f"★ '{split}' done in {time.time() - start:.1f}s, CSV → {csv_path}")
 
-    all_annotations = []
-    with Pool(processes=num_processes) as pool:
-        # Use imap_unordered for better load balancing
-        for result in pool.imap_unordered(process_single_video, tasks, chunksize=chunk_size):
-            if result:
-                all_annotations.append(result)
-
-    # Save annotations to CSV
-    csv_file_path = csv_path / f"{split}_annotations.csv"
-    with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(["Video_ID", "Frames_Path", "Gloss_Label"])
-        writer.writerows(all_annotations)
-
-    elapsed_time = time.time() - start_time
-    logging.info(f"Split {split} processed in {elapsed_time:.2f} seconds with {len(all_annotations)} videos")
-    logging.info(f"Annotations for {split} saved to {csv_file_path}")
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--video_root', default="/home/martinvalentine/Desktop/CSLR-VSL/data/raw/VSL_V2", type=str)
+    parser.add_argument('--output_root', default="/home/martinvalentine/Desktop/CSLR-VSL/data/interim/frames/VSL_V2", type=str)
+    parser.add_argument('--csv_root', default="/home/martinvalentine/Desktop/CSLR-VSL/data/splits/VSL_V2/csv", type=str)
+    parser.add_argument('--splits', nargs='+', default=["train", "test", "dev"])
+    parser.add_argument('--sample_rate', type=int, default=1)
+    parser.add_argument('--workers', type=int, default=max(1, cpu_count() - 1))
+    parser.add_argument('--chunksize', type=int, default=0)
+    parser.add_argument('--flip_vertical', action='store_true', help="Flip video frames vertically before saving")
+    parser.add_argument('--crop_width', type=int, default=0, help="Target width for cropping")
+    parser.add_argument('--crop_height', type=int, default=0, help="Target height for cropping")
+    return parser.parse_args()
 
 
-def get_optimal_parameters(total_videos):
-    """
-    Calculate optimal parameters based on the scripts size and system.
+def main():
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    args = parse_args()
 
-    Returns:
-        tuple: (chunk_size, sample_rate)
-    """
-    system_memory = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024 ** 3)  # RAM in GB
-    cpus = cpu_count()
+    crop_dims = (args.crop_width, args.crop_height) if args.crop_width > 0 and args.crop_height > 0 else None
 
-    # Estimate optimal chunk size based on number of CPUs and videos
-    chunk_size = max(1, min(5, total_videos // (cpus * 10)))
+    for split in args.splits:
+        logging.info(f"--- processing split '{split}' ---")
+        process_split_optimized_raw_flat(
+            args.video_root,
+            args.output_root,
+            args.csv_root,
+            split,
+            num_procs=args.workers,
+            sample_rate=args.sample_rate,
+            chunk_size=args.chunksize,
+            flip_vertical=args.flip_vertical,
+            crop_dims=crop_dims
+        )
 
-    # Determine if we should sample frames based on system memory
-    if system_memory < 8:  # Less than 8GB RAM
-        sample_rate = 2  # Extract every other frame
-    else:
-        sample_rate = 1  # Extract all frames
-
-    return chunk_size, sample_rate
-
-
-def count_videos(root_dir, split):
-    """
-    Counts the total number of video files in the specified split.
-    """
-    count = 0
-    split_path = root_dir / split
-    if not split_path.exists():
-        return 0
-
-    for sentence_folder in split_path.iterdir():
-        if sentence_folder.is_dir():
-            for signer_folder in sentence_folder.iterdir():
-                if signer_folder.is_dir():
-                    for video_file in signer_folder.iterdir():
-                        if video_file.suffix.lower() in {".mp4", ".mov", ".avi"}:
-                            count += 1
-    return count
+    logging.info("All splits processed and frame annotations generated.")
 
 
 if __name__ == "__main__":
-    # Configure paths
-    root_dir = Path("/home/martinvalentine/Desktop/CSLR-VSL/data/raw/VSL/VSL_Benchmark")
-    output_dir = Path("/home/martinvalentine/Desktop/CSLR-VSL/data/interim/VSL/frames/VSL_Benchmark")
-    csv_dir = Path("/home/martinvalentine/Desktop/CSLR-VSL/data/interim/VSL/frames/VSL_Benchmark")
-
-    # Count total videos to determine optimal parameters
-    total_videos = sum(count_videos(root_dir, split) for split in ["train", "test", "dev"])
-    chunk_size, sample_rate = get_optimal_parameters(total_videos)
-
-    # Determine optimal number of processes (leave some resources for the system)
-    available_cpus = cpu_count()
-    num_processes = max(1, available_cpus - 1)
-
-    logging.info(
-        f"Starting processing with {num_processes} processes, chunk size {chunk_size}, sample rate {sample_rate}")
-
-    # Process each split
-    for split in ["train", "test", "dev"]:
-        if (root_dir / split).exists():
-            process_and_extract_frames_optimized(
-                root_dir,
-                output_dir,
-                csv_dir,
-                split,
-                num_processes=num_processes,
-                sample_rate=sample_rate,
-                chunk_size=chunk_size
-            )
-        else:
-            logging.warning(f"Split directory {split} not found, skipping")
-
-    logging.info("Frame extraction and annotation saving complete for all splits!")
+    main()

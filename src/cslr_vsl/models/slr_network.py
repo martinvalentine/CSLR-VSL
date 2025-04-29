@@ -1,10 +1,10 @@
-import src.cslr_vsl.utils as utils
+import cslr_vsl.utils as utils
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from src.cslr_vsl.modules.criterions import SeqKD
-from src.cslr_vsl.modules import BiLSTMLayer, TemporalConv
-import src.cslr_vsl.modules as resnet
+from cslr_vsl.modules.criterions import SeqKD
+from cslr_vsl.modules import BiLSTMLayer, TemporalConv
+import cslr_vsl.modules.resnet as resnet
 
 class Identity(nn.Module):
     def __init__(self):
@@ -85,7 +85,11 @@ class SLRModel(nn.Module):
             # frame-wise features
             framewise = x
 
+        # DEBUG
+        # print("DEBUG: Shape of framewise before conv1d:", framewise.shape)
+
         conv1d_outputs = self.conv1d(framewise, len_x)
+
         # x: T, B, C
         x = conv1d_outputs['visual_feat']
         lgt = conv1d_outputs['feat_len']

@@ -17,15 +17,14 @@ import pyarrow as pa
 from PIL import Image
 import torch.utils.data as data
 import matplotlib.pyplot as plt
-from src.cslr_vsl.utils import video_augmentation
+from cslr_vsl.utils import video_augmentation
 from torch.utils.data.sampler import Sampler
 
-sys.path.append("../CorrNet")
 global kernel_sizes 
 
 class BaseFeeder(data.Dataset):
-    def __init__(self, prefix, gloss_dict, dataset='vsl', drop_ratio=1, num_gloss=-1, mode="train", transform_mode=True,
-                 datatype="lmdb", frame_interval=1, image_scale=1.0, kernel_size=1, input_size=224):
+    def __init__(self, prefix, gloss_dict, dataset='VSL_V0', drop_ratio=1, num_gloss=-1, mode="train", transform_mode=True,
+                 datatype="lmdb", frame_interval=1, image_scale=1.0, kernel_size=1, input_size=256):
         self.mode = mode
         self.ng = num_gloss
         self.prefix = prefix
@@ -37,9 +36,9 @@ class BaseFeeder(data.Dataset):
         kernel_sizes = kernel_size
         self.frame_interval = frame_interval # not implemented for read_features()
         self.image_scale = image_scale # not implemented for read_features()
-        self.feat_prefix = f"{prefix}/features/fullFrame-256x256px/{mode}"
+        self.feat_prefix = f"{prefix}/256x256px/{dataset}/{mode}"
         self.transform_mode = "train" if transform_mode else "test"
-        self.inputs_list = np.load(f"./preprocess/{dataset}/{mode}_info.npy", allow_pickle=True).item()
+        self.inputs_list = np.load(f"./data/processed/{dataset}/{mode}_info.npy", allow_pickle=True).item()
         print(mode, len(self))
         self.data_aug = self.transform()
         print("")
@@ -61,14 +60,18 @@ class BaseFeeder(data.Dataset):
     def read_video(self, index):
         # load file info
         fi = self.inputs_list[index]
-        if 'VSL' in self.dataset:
-            img_folder = os.path.join(self.prefix,"/home/martinvalentine/Desktop/CSLR-VSL/data/interim/VSL_Sample/" + fi['folder'])
+        if 'VSL_V0' in self.dataset:
+            img_folder = os.path.join(self.prefix,"/home/martinvalentine/Desktop/CSLR-VSL/data/interim/256x256px/VSL_V0/" + fi['folder'])
+        elif 'VSL_V1' in self.dataset:
+            img_folder = os.path.join(self.prefix,"/home/martinvalentine/Desktop/CSLR-VSL/data/interim/256x256px/VSL_V1/" + fi['folder'])
+        elif 'VSL_V2' in self.dataset:
+            img_folder = os.path.join(self.prefix,"/home/martinvalentine/Desktop/CSLR-VSL/data/interim/256x256px/VSL_V2/" + fi['folder'])
 
         img_list = sorted(glob.glob(img_folder))
         img_list = img_list[int(torch.randint(0, self.frame_interval, [1]))::self.frame_interval]
 
         # DEBUG:
-        print(f"Loading {len(img_list)} frames from {img_folder}")
+        # print(f"Loading {len(img_list)} frames from {img_folder}")
 
         label_list = []
         for phase in fi['label'].split(" "):
@@ -94,14 +97,14 @@ class BaseFeeder(data.Dataset):
             print("Apply training transform.")
             return video_augmentation.Compose([
                 # video_augmentation.CenterCrop(224),
-                # video_augmentation.WERAugment('/lustre/wangtao/current_exp/exp/baseline/boundary.npy'),
+                # Directly resize to the target input size (e.g., 224x224)
                 video_augmentation.RandomCrop(self.input_size),
                 video_augmentation.RandomHorizontalFlip(0.5),
-                video_augmentation.Resize(self.image_scale),
+                video_augmentation.Resize(self.image_scale),  # CHANGED FROM self.image_scale
                 video_augmentation.ToTensor(),
                 video_augmentation.TemporalRescale(0.2, self.frame_interval),
             ])
-        else:
+        else:  # "test" transform_mode
             print("Apply testing transform.")
             return video_augmentation.Compose([
                 video_augmentation.CenterCrop(self.input_size),
