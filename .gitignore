@@ -3,6 +3,9 @@
 /third_party/software/sclite
 /third_party/ctcdecode
 
+# Exclude logs
+/outputs/
+
 # API keys
 /test/creds.py
 
