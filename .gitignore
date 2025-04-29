@@ -1,5 +1,5 @@
 # Ignore Dataset
-.data/
+/data/
 /third_party/software/sclite
 /third_party/ctcdecode
 
