@@ -12,8 +12,8 @@ import time
 from collections import OrderedDict
 
 faulthandler.enable()
-import src.cslr_vsl.utils as utils
-from src.cslr_vsl.modules.sync_batchnorm import convert_model
+import cslr_vsl.utils as utils
+from cslr_vsl.modules.sync_batchnorm import convert_model
 from cslr_vsl.engine.seq_scripts import seq_train, seq_eval, seq_feature_generation
 
 
@@ -21,7 +21,7 @@ class Processor():
     def __init__(self, arg):
         self.arg = arg
         if os.path.exists(self.arg.work_dir):
-            answer = input('Current dir exists, do you want to remove and refresh it?\n')
+            answer = input('Current dir exists, do you want to remove and refresh it?\n').lower()
             if answer in ['yes','y','ok','1']:
                 print('Dir removed !')
                 shutil.rmtree(self.arg.work_dir)
@@ -31,9 +31,9 @@ class Processor():
         else:
             os.makedirs(self.arg.work_dir)
         shutil.copy2(__file__, self.arg.work_dir)
-        shutil.copy2('../configs/baseline.yaml', self.arg.work_dir)
-        shutil.copy2('modules/tconv.py', self.arg.work_dir)
-        shutil.copy2('modules/resnet.py', self.arg.work_dir)
+        shutil.copy2('/home/martinvalentine/Desktop/CSLR-VSL/configs/baseline.yaml', self.arg.work_dir)
+        shutil.copy2('/home/martinvalentine/Desktop/CSLR-VSL/src/cslr_vsl/modules/tconv.py', self.arg.work_dir)
+        shutil.copy2('/home/martinvalentine/Desktop/CSLR-VSL/src/cslr_vsl/modules/resnet.py', self.arg.work_dir)
         self.recoder = utils.Recorder(self.arg.work_dir, self.arg.print_log, self.arg.log_interval)
         self.save_arg()
         if self.arg.random_fix:
@@ -71,7 +71,6 @@ class Processor():
                 #         break
                 # print("\n END CHECK" )
                 # END DEBUG
-
 
                 if eval_model:
                     dev_wer = seq_eval(self.arg, self.data_loader['dev'], self.model, self.device,
@@ -202,8 +201,13 @@ class Processor():
         print("Loading data")
         self.feeder = import_class(self.arg.feeder)
         shutil.copy2(inspect.getfile(self.feeder), self.arg.work_dir)
-        if self.arg.dataset == 'VSL':
-            dataset_list = zip(["train", "train_eval", "dev", "test"], [True, False, False, False])
+        if self.arg.dataset == 'VSL_V0':
+            dataset_list = zip(["train", "dev", "test"], [True, False, False])
+        elif self.arg.dataset == 'VSL_V1':
+            dataset_list = zip(["train", "dev", "test"], [True, False, False])
+        elif self.arg.dataset == 'VSL_V2':
+            dataset_list = zip(["train", "dev", "test"], [True, False, False])
+
         # DEBUG
         print("Dataset List: ", dataset_list)
 
@@ -215,6 +219,7 @@ class Processor():
             self.dataset[mode] = self.feeder(gloss_dict=self.gloss_dict, kernel_size= self.kernel_sizes, dataset=self.arg.dataset, **arg)
             self.data_loader[mode] = self.build_dataloader(self.dataset[mode], mode, train_flag)
         print("Loading data finished.")
+
     def init_fn(self, worker_id):
         np.random.seed(int(self.arg.random_seed)+worker_id)
     def build_dataloader(self, dataset, mode, train_flag):
@@ -240,7 +245,7 @@ def import_class(name):
 if __name__ == '__main__':
     sparser = utils.get_parser()
     p = sparser.parse_args()
-    # p.config = "baseline_iter.yaml"
+    # p.config = "../configs/baseline.yaml"
     if p.config is not None:
         with open(p.config, 'r') as f:
             try:
@@ -254,7 +259,7 @@ if __name__ == '__main__':
                 assert (k in key)
         sparser.set_defaults(**default_arg)
     args = sparser.parse_args()
-    with open(f"./configs/{args.dataset}.yaml", 'r') as f:
+    with open(f"/home/martinvalentine/Desktop/CSLR-VSL/configs/{args.dataset}.yaml", 'r') as f:
         args.dataset_info = yaml.load(f, Loader=yaml.FullLoader)
 
     print("Dataset Info:", args.dataset_info)  # Debugging line
