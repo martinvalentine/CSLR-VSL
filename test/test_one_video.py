@@ -2,11 +2,11 @@
 import numpy as np
 import os
 import cv2
-from src.cslr_vsl.utils import video_augmentation
+from cslr_vsl.utils import video_augmentation
 from cslr_vsl.models.slr_network import SLRModel
 import torch
 from collections import OrderedDict
-import src.cslr_vsl.utils as utils
+import cslr_vsl.utils as utils
 from decord import VideoReader, cpu
 import argparse
 VIDEO_FORMATS = [".mp4", ".avi", ".mov", ".MOV", ".mkv"]
@@ -38,21 +38,24 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--model_path", type=str, help="The path to pretrained weights")
 parser.add_argument("--video_path", type=str, help="The path to a video file or a dir contains extracted images from a video")
 parser.add_argument("--device", type=int, default=0, help="Which device to run inference")
-parser.add_argument("--language", type=str, default='vsl', choices=['vsl'], help="The target sign language")
+parser.add_argument("--language", type=str, default='vsl_v0', choices=['vsl_v0', 'vsl_v1', 'vsl_v2'], help="The target sign language")
 parser.add_argument("--max_frames_num", type=int, default=360, help="The max input frames sampled from an input video")
     
 args = parser.parse_args()
 
 
 device_id = args.device  # specify which gpu to use
-if args.language == 'vsl':
-    dataset = 'VSL'
+if args.language == 'vsl_v0':
+    dataset = 'VSL_V0'
+elif args.language == 'vsl_v1':
+    dataset = 'VSL_V1'
+elif args.language == 'vsl_v2':
+    dataset = 'VSL_V2'
 else:
     raise ValueError("Please select target language from ['vsl'] in your command")
 
-
 # Load data and apply transformation
-dict_path = f'./preprocess/{dataset}/gloss_dict.npy'  # Use the gloss dict of vsl scripts
+dict_path = f'/home/martinvalentine/Desktop/CSLR-VSL/data/processed/{dataset}/gloss_dict.npy'  # Use the gloss dict of vsl scripts
 gloss_dict = np.load(dict_path, allow_pickle=True).item()
 
 if os.path.isdir(args.video_path): # extracted images of a video
